@@ -63,7 +63,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 .hist-cat.ka{background:var(--hl);color:var(--h)}.hist-cat.ko{background:var(--pl);color:var(--p)}
 .hist-info{flex:1;min-width:0}
 .hist-place{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hist-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.hist-meta{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-memo{color:var(--muted);font-style:italic}
 .hbadge{font-size:11px;padding:2px 7px;border-radius:10px;margin-right:4px;font-weight:600}
 .hbadge.ka{background:var(--hl);color:var(--h)}.hbadge.ko{background:var(--pl);color:var(--p)}
 .hist-amt{font-size:16px;font-weight:700;text-align:right;flex-shrink:0;letter-spacing:-.3px}
@@ -433,7 +434,7 @@ function renderDailyList(){
         <div class="day-rec-cat ${r.cat}">${r.cat==='ka'?'家計':'個人'}</div>
         <div class="day-rec-info">
           <div class="day-rec-place">${r.place||'場所未設定'}</div>
-          <div class="day-rec-meta"><span class="hbadge ${r.cat}" style="font-size:10px;padding:1px 5px">${r.use||'用途未設定'}</span>${r.pay||''}</div>
+          <div class="day-rec-meta"><span class="hbadge ${r.cat}" style="font-size:10px;padding:1px 5px">${r.use||'用途未設定'}</span>${r.pay||''}${r.memo?`<span class="hist-memo"> ／ ${r.memo}</span>`:''}</div>
         </div>
         <div class="day-rec-amt">${fmt(r.amount)}</div>
       </div>`;
@@ -535,7 +536,7 @@ function renderMain(){
         <div class="hist-cat ${r.cat}">${r.cat==='ka'?'家計':'個人'}</div>
         <div class="hist-info">
           <div class="hist-place">${r.place||'場所未設定'}</div>
-          <div class="hist-meta"><span class="hbadge ${r.cat}">${r.use||'用途未設定'}</span>${r.pay||''}</div>
+          <div class="hist-meta"><span class="hbadge ${r.cat}">${r.use||'用途未設定'}</span>${r.pay||''}${r.memo?`<span class="hist-memo"> ／ ${r.memo}</span>`:''}</div>
         </div>
         <div class="hist-amt">${fmt(r.amount)}</div>
       </div>`;
