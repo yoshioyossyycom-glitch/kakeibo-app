@@ -55,7 +55,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 
 /* history */
 .hist-section{margin-top:8px}
-.hist-day{padding:6px 16px;font-size:11px;color:var(--muted);background:var(--bg);font-weight:600;letter-spacing:.3px}
+.hist-day{padding:6px 16px;font-size:11px;color:var(--muted);background:var(--bg);font-weight:600;letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center}
+.day-total{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0}
 .hist-item{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border);background:var(--card);gap:12px;cursor:pointer;transition:background .1s;-webkit-user-select:none}
 .hist-item:active{background:#f0f0f0}
 .hist-cat{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
@@ -108,6 +109,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 .ttab{flex:1;padding:8px 4px;border-radius:8px;text-align:center;cursor:pointer;font-size:13px;border:1px solid var(--border);color:var(--muted);font-weight:500;transition:all .15s}
 .ttab.active{background:var(--acc-l);color:var(--acc);border-color:var(--acc);font-weight:700}
 .bar-chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* 日別折りたたみ */
+.day-row{border-bottom:1px solid var(--border)}
+.day-row:last-child{border-bottom:none}
+.day-header{display:flex;align-items:center;padding:11px 4px;cursor:pointer;-webkit-user-select:none;gap:8px}
+.day-header-left{flex:1}
+.day-header-date{font-size:14px;font-weight:700}
+.day-header-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.day-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.day-total-amt{font-size:15px;font-weight:700}
+.day-chevron{font-size:16px;color:var(--muted);transition:transform .2s;display:inline-block}
+.day-chevron.open{transform:rotate(90deg)}
+.day-body{display:none;padding:0 0 4px}
+.day-body.open{display:block}
+.day-rec{display:flex;align-items:center;padding:9px 4px 9px 12px;border-top:1px solid var(--border);gap:10px;cursor:pointer}
+.day-rec:active{background:var(--bg)}
+.day-rec-cat{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.day-rec-cat.ka{background:var(--hl);color:var(--h)}.day-rec-cat.ko{background:var(--pl);color:var(--p)}
+.day-rec-info{flex:1;min-width:0}
+.day-rec-place{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-rec-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.day-rec-amt{font-size:14px;font-weight:700;flex-shrink:0}
+.daily-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px}
 
 /* mgmt */
 .mw{padding:16px}.ms{margin-bottom:20px}
@@ -223,6 +246,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
           <canvas id="c-cat" width="300" height="170"></canvas>
           <div class="legw" id="l-cat"></div>
         </div>
+        <div class="cc">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="ct" style="margin:0" id="daily-title">📅 日別の使用金額</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="mnav-btn" style="width:30px;height:30px;font-size:18px" id="d-btn-prev" onclick="shiftDailyMonth(-1)">‹</button>
+              <span style="font-size:12px;color:var(--muted);min-width:48px;text-align:center;font-weight:600" id="d-mnav-mini"></span>
+              <button class="mnav-btn" style="width:30px;height:30px;font-size:18px" id="d-btn-next" onclick="shiftDailyMonth(1)">›</button>
+            </div>
+          </div>
+          <div id="daily-list"></div>
+        </div>
       </div>
     </div>
 
@@ -263,6 +297,7 @@ let recs=[],master={},curCat='ka',editId=null,sTab='all',tTab='all';
 const now=new Date();
 let vY=now.getFullYear(),vM=now.getMonth()+1;
 let sY=now.getFullYear(),sM=now.getMonth()+1;
+let dY=now.getFullYear(),dM=now.getMonth()+1;
 
 function load(){try{return JSON.parse(localStorage.getItem(SK)||'[]')}catch(e){return[]}}
 function save(){localStorage.setItem(SK,JSON.stringify(recs))}
@@ -305,6 +340,75 @@ function shiftStatsMonth(d){
   if(m>12){m=1;y++}if(m<1){m=12;y--}
   if(y>now.getFullYear()||(y===now.getFullYear()&&m>now.getMonth()+1))return;
   sY=y;sM=m;renderMonthDetail();
+}
+function shiftDailyMonth(d){
+  let m=dM+d,y=dY;
+  if(m>12){m=1;y++}if(m<1){m=12;y--}
+  if(y>now.getFullYear()||(y===now.getFullYear()&&m>now.getMonth()+1))return;
+  dY=y;dM=m;renderDailyList();
+}
+function renderDailyList(){
+  const ny=now.getFullYear(),nm=now.getMonth()+1;
+  document.getElementById('d-btn-next').disabled=(dY===ny&&dM===nm);
+  document.getElementById('d-mnav-mini').textContent=`${dY}/${dM}`;
+  document.getElementById('daily-title').textContent=`📅 ${dM}月の日別使用金額`;
+  const mr=mRecs(dY,dM).sort((a,b)=>b.date.localeCompare(a.date));
+  const byDay={};
+  mr.forEach(r=>{if(!byDay[r.date])byDay[r.date]=[];byDay[r.date].push(r)});
+  const wdays=['日','月','火','水','木','金','土'];
+  const container=document.getElementById('daily-list');
+  if(!mr.length){container.innerHTML='<div class="daily-empty">この月の記録はありません</div>';return}
+  let html='';
+  Object.keys(byDay).sort((a,b)=>b.localeCompare(a)).forEach(day=>{
+    const dd=parseInt(day.split('-')[2]);
+    const w=wdays[new Date(day).getDay()];
+    const dayRecs=byDay[day];
+    const ka=dayRecs.filter(r=>r.cat==='ka').reduce((a,r)=>a+r.amount,0);
+    const ko=dayRecs.filter(r=>r.cat==='ko').reduce((a,r)=>a+r.amount,0);
+    const total=ka+ko;
+    let sub='';
+    if(ka>0&&ko>0) sub=`<span style="color:var(--h)">家計 ${fmt(ka)}</span>　<span style="color:var(--p)">個人 ${fmt(ko)}</span>`;
+    else if(ka>0) sub=`<span style="color:var(--h)">家計 ${fmt(ka)}</span>`;
+    else sub=`<span style="color:var(--p)">個人 ${fmt(ko)}</span>`;
+    const uid=`day-${day.replace(/-/g,'')}`;
+    html+=`<div class="day-row">
+      <div class="day-header" onclick="toggleDay('${uid}')">
+        <div class="day-header-left">
+          <div class="day-header-date">${dd}日（${w}）<span style="font-size:12px;color:var(--muted);font-weight:500;margin-left:4px">${dayRecs.length}件</span></div>
+          <div class="day-header-sub">${sub}</div>
+        </div>
+        <div class="day-header-right">
+          <div class="day-total-amt">${fmt(total)}</div>
+          <span class="day-chevron" id="chev-${uid}">›</span>
+        </div>
+      </div>
+      <div class="day-body" id="${uid}">`;
+    dayRecs.forEach(r=>{
+      html+=`<div class="day-rec" onclick="openEditFromStats('${r.id}')">
+        <div class="day-rec-cat ${r.cat}">${r.cat==='ka'?'家計':'個人'}</div>
+        <div class="day-rec-info">
+          <div class="day-rec-place">${r.place||'場所未設定'}</div>
+          <div class="day-rec-meta"><span class="hbadge ${r.cat}" style="font-size:10px;padding:1px 5px">${r.use||'用途未設定'}</span>${r.pay||''}</div>
+        </div>
+        <div class="day-rec-amt">${fmt(r.amount)}</div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  container.innerHTML=html;
+}
+function toggleDay(uid){
+  const body=document.getElementById(uid);
+  const chev=document.getElementById('chev-'+uid);
+  if(!body)return;
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  chev.classList.toggle('open',!isOpen);
+}
+function openEditFromStats(id){
+  const r=recs.find(x=>x.id===id);if(!r)return;
+  const[y,m]=r.date.split('-').map(Number);vY=y;vM=m;
+  openEdit(id);
 }
 
 function setSTab(t){
@@ -352,7 +456,17 @@ function renderMain(){
     const dd=parseInt(day.split('-')[2]);
     const wdays=['日','月','火','水','木','金','土'];
     const w=wdays[new Date(day).getDay()];
-    html+=`<div class="hist-day">${dd}日（${w}）</div>`;
+    const dayRecs=byDay[day];
+    const dayKa=dayRecs.filter(r=>r.cat==='ka').reduce((a,r)=>a+r.amount,0);
+    const dayKo=dayRecs.filter(r=>r.cat==='ko').reduce((a,r)=>a+r.amount,0);
+    let daySub='';
+    if(dayKa>0&&dayKo>0) daySub=`家計 ${fmt(dayKa)}　個人 ${fmt(dayKo)}`;
+    else if(dayKa>0) daySub=`家計 ${fmt(dayKa)}`;
+    else if(dayKo>0) daySub=`個人 ${fmt(dayKo)}`;
+    html+=`<div class="hist-day">
+      <span>${dd}日（${w}）</span>
+      <span class="day-total">${daySub}</span>
+    </div>`;
     byDay[day].forEach(r=>{
       html+=`<div class="hist-item" onclick="openEdit('${r.id}')">
         <div class="hist-cat ${r.cat}">${r.cat==='ka'?'家計':'個人'}</div>
@@ -526,7 +640,10 @@ function renderMonthDetail(){
   drawPie('c-cat','l-cat',{'家計':mr.filter(r=>r.cat==='ka').reduce((a,r)=>a+r.amount,0),'個人':mr.filter(r=>r.cat==='ko').reduce((a,r)=>a+r.amount,0)},[COL_KA,COL_KO]);
 }
 
-function renderStats(){drawTrend();renderMonthDetail()}
+function renderStats(){
+  dY=sY;dM=sM;
+  drawTrend();renderMonthDetail();renderDailyList();
+}
 
 function drawPie(cid,lid,data,cols){
   const c=document.getElementById(cid);if(!c)return;
