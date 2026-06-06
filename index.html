@@ -109,6 +109,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 .ttab{flex:1;padding:8px 4px;border-radius:8px;text-align:center;cursor:pointer;font-size:13px;border:1px solid var(--border);color:var(--muted);font-weight:500;transition:all .15s}
 .ttab.active{background:var(--acc-l);color:var(--acc);border-color:var(--acc);font-weight:700}
 .bar-chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* アコーディオンカード */
+.acc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.acc-header{display:flex;align-items:center;padding:14px 16px;cursor:pointer;gap:8px;-webkit-user-select:none}
+.acc-header.open{border-bottom:1px solid var(--border)}
+.acc-title{font-size:14px;font-weight:700;color:#1a1a1a;flex:1}
+.acc-chev{font-size:18px;color:var(--muted);transition:transform .22s;flex-shrink:0;line-height:1}
+.acc-chev.open{transform:rotate(90deg)}
+.acc-body{display:none;padding:14px 16px}
+.acc-body.open{display:block}
 /* 日別折りたたみ */
 .day-row{border-bottom:1px solid var(--border)}
 .day-row:last-child{border-bottom:none}
@@ -215,48 +224,84 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
         <h1>📊 グラフ・分析</h1>
       </div>
       <div class="sw">
-        <div class="cc">
-          <div class="ct">📈 月別支出の推移（直近6ヶ月）</div>
-          <div class="trend-tabs">
-            <div class="ttab active" id="tt-all" onclick="setTTab('all')">すべて</div>
-            <div class="ttab" id="tt-ka" onclick="setTTab('ka')">家計のみ</div>
-            <div class="ttab" id="tt-ko" onclick="setTTab('ko')">個人のみ</div>
+
+        <!-- ① 月別推移（デフォルト開く） -->
+        <div class="acc-card">
+          <div class="acc-header open" onclick="toggleAcc('sec-trend')">
+            <span class="acc-title">📈 月別支出の推移</span>
+            <span class="acc-chev open" id="achev-sec-trend">›</span>
           </div>
-          <div class="bar-chart-wrap"><canvas id="c-trend" height="200"></canvas></div>
-          <div id="trend-summary" style="margin-top:12px"></div>
-        </div>
-        <div class="cc">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div class="ct" style="margin:0" id="month-stats-title">今月の用途別内訳</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <button class="mnav-btn" style="width:30px;height:30px;font-size:18px" id="s-btn-prev" onclick="shiftStatsMonth(-1)">‹</button>
-              <span style="font-size:12px;color:var(--muted);min-width:48px;text-align:center;font-weight:600" id="s-mnav-mini"></span>
-              <button class="mnav-btn" style="width:30px;height:30px;font-size:18px" id="s-btn-next" onclick="shiftStatsMonth(1)">›</button>
+          <div class="acc-body open" id="sec-trend">
+            <div class="trend-tabs">
+              <div class="ttab active" id="tt-all" onclick="setTTab('all')">すべて</div>
+              <div class="ttab" id="tt-ka" onclick="setTTab('ka')">家計のみ</div>
+              <div class="ttab" id="tt-ko" onclick="setTTab('ko')">個人のみ</div>
             </div>
+            <div class="bar-chart-wrap"><canvas id="c-trend" height="200"></canvas></div>
+            <div id="trend-summary" style="margin-top:12px"></div>
           </div>
-          <canvas id="c-use" width="300" height="190"></canvas>
-          <div class="legw" id="l-use"></div>
         </div>
-        <div class="cc">
-          <div class="ct">📍 場所別ランキング</div>
-          <div id="p-rank"></div>
-        </div>
-        <div class="cc">
-          <div class="ct" id="cat-ratio-title">🏠 家計 vs 個人の比率</div>
-          <canvas id="c-cat" width="300" height="170"></canvas>
-          <div class="legw" id="l-cat"></div>
-        </div>
-        <div class="cc">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div class="ct" style="margin:0" id="daily-title">📅 日別の使用金額</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <button class="mnav-btn" style="width:30px;height:30px;font-size:18px" id="d-btn-prev" onclick="shiftDailyMonth(-1)">‹</button>
-              <span style="font-size:12px;color:var(--muted);min-width:48px;text-align:center;font-weight:600" id="d-mnav-mini"></span>
-              <button class="mnav-btn" style="width:30px;height:30px;font-size:18px" id="d-btn-next" onclick="shiftDailyMonth(1)">›</button>
+
+        <!-- ② 日別使用金額（デフォルト閉じる） -->
+        <div class="acc-card">
+          <div class="acc-header" onclick="toggleAcc('sec-daily')">
+            <div style="flex:1">
+              <span class="acc-title" id="daily-title">📅 日別の使用金額</span>
             </div>
+            <div style="display:flex;align-items:center;gap:6px" onclick="event.stopPropagation()">
+              <button class="mnav-btn" style="width:28px;height:28px;font-size:16px" id="d-btn-prev" onclick="shiftDailyMonth(-1)">‹</button>
+              <span style="font-size:12px;color:var(--muted);min-width:42px;text-align:center;font-weight:600" id="d-mnav-mini"></span>
+              <button class="mnav-btn" style="width:28px;height:28px;font-size:16px" id="d-btn-next" onclick="shiftDailyMonth(1)">›</button>
+            </div>
+            <span class="acc-chev" id="achev-sec-daily">›</span>
           </div>
-          <div id="daily-list"></div>
+          <div class="acc-body" id="sec-daily">
+            <div id="daily-list"></div>
+          </div>
         </div>
+
+        <!-- ③ 用途別内訳（デフォルト閉じる） -->
+        <div class="acc-card">
+          <div class="acc-header" onclick="toggleAcc('sec-use')">
+            <div style="flex:1">
+              <span class="acc-title" id="month-stats-title">🏷 用途別内訳</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px" onclick="event.stopPropagation()">
+              <button class="mnav-btn" style="width:28px;height:28px;font-size:16px" id="s-btn-prev" onclick="shiftStatsMonth(-1)">‹</button>
+              <span style="font-size:12px;color:var(--muted);min-width:42px;text-align:center;font-weight:600" id="s-mnav-mini"></span>
+              <button class="mnav-btn" style="width:28px;height:28px;font-size:16px" id="s-btn-next" onclick="shiftStatsMonth(1)">›</button>
+            </div>
+            <span class="acc-chev" id="achev-sec-use">›</span>
+          </div>
+          <div class="acc-body" id="sec-use">
+            <canvas id="c-use" width="300" height="190"></canvas>
+            <div class="legw" id="l-use"></div>
+          </div>
+        </div>
+
+        <!-- ④ 場所別ランキング（デフォルト閉じる） -->
+        <div class="acc-card">
+          <div class="acc-header" onclick="toggleAcc('sec-place')">
+            <span class="acc-title">📍 場所別ランキング</span>
+            <span class="acc-chev" id="achev-sec-place">›</span>
+          </div>
+          <div class="acc-body" id="sec-place">
+            <div id="p-rank"></div>
+          </div>
+        </div>
+
+        <!-- ⑤ 家計vs個人（デフォルト閉じる） -->
+        <div class="acc-card">
+          <div class="acc-header" onclick="toggleAcc('sec-cat')">
+            <span class="acc-title" id="cat-ratio-title">🏠 家計 vs 個人の比率</span>
+            <span class="acc-chev" id="achev-sec-cat">›</span>
+          </div>
+          <div class="acc-body" id="sec-cat">
+            <canvas id="c-cat" width="300" height="170"></canvas>
+            <div class="legw" id="l-cat"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -396,6 +441,24 @@ function renderDailyList(){
     html+=`</div></div>`;
   });
   container.innerHTML=html;
+}
+function toggleAcc(id){
+  const body=document.getElementById(id);
+  const chev=document.getElementById('achev-'+id);
+  const header=body?body.previousElementSibling:null;
+  if(!body)return;
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  if(chev)chev.classList.toggle('open',!isOpen);
+  if(header)header.classList.toggle('open',!isOpen);
+  // canvasを含むセクションを開いた時に再描画
+  if(!isOpen){
+    if(id==='sec-trend')drawTrend();
+    if(id==='sec-use')renderMonthDetail();
+    if(id==='sec-place')renderMonthDetail();
+    if(id==='sec-cat')renderMonthDetail();
+    if(id==='sec-daily')renderDailyList();
+  }
 }
 function toggleDay(uid){
   const body=document.getElementById(uid);
@@ -616,12 +679,19 @@ function drawTrend(){
   }else if(sumEl)sumEl.innerHTML='';
 }
 
-function renderMonthDetail(){
+function renderMonthLabel(){
   const ny=now.getFullYear(),nm=now.getMonth()+1;
   document.getElementById('s-btn-next').disabled=(sY===ny&&sM===nm);
   document.getElementById('s-mnav-mini').textContent=`${sY}/${sM}`;
-  document.getElementById('month-stats-title').textContent=isNow(sY,sM)?'今月の用途別内訳':`${sM}月の用途別内訳`;
-  document.getElementById('cat-ratio-title').textContent=isNow(sY,sM)?'🏠 家計 vs 個人の比率':`🏠 ${sM}月の家計 vs 個人`;
+}
+function renderDailyLabel(){
+  const ny=now.getFullYear(),nm=now.getMonth()+1;
+  document.getElementById('d-btn-next').disabled=(dY===ny&&dM===nm);
+  document.getElementById('d-mnav-mini').textContent=`${dY}/${dM}`;
+  document.getElementById('daily-title').textContent=`📅 ${dM}月の日別使用金額`;
+}
+function renderMonthDetail(){
+  renderMonthLabel();
   const mr=mRecs(sY,sM);
   const useMap={},placeMap={};
   mr.forEach(r=>{
@@ -642,7 +712,11 @@ function renderMonthDetail(){
 
 function renderStats(){
   dY=sY;dM=sM;
-  drawTrend();renderMonthDetail();renderDailyList();
+  // 月別推移はデフォルト開いているので描画。他は開いた時に描画。
+  drawTrend();
+  // 日別・月別ナビラベルだけ更新
+  renderDailyLabel();
+  renderMonthLabel();
 }
 
 function drawPie(cid,lid,data,cols){
