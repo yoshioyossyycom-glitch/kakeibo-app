@@ -511,14 +511,14 @@ function renderMain(){
   updateSummary();
   const isCur=isNow(vY,vM);
   const btn=document.getElementById('add-btn');
-  btn.className=isCur?'add-btn':'add-btn disabled';
-  btn.onclick=isCur?openAdd:null;
+  btn.className='add-btn';
+  btn.onclick=openAdd;
   const mr=mRecs(vY,vM).sort((a,b)=>b.date.localeCompare(a.date));
   const byDay={};
   mr.forEach(r=>{if(!byDay[r.date])byDay[r.date]=[];byDay[r.date].push(r)});
   let html='';
   if(!mr.length){
-    html=`<div class="empty-state"><div class="empty-icon">📝</div>${isCur?'まだ記録がありません<br>「記録を追加」から始めましょう':'この月の記録はありません'}</div>`;
+    html=`<div class="empty-state"><div class="empty-icon">📝</div>この月の記録はありません<br>「記録を追加」から入力できます</div>`;
   }
   Object.keys(byDay).sort((a,b)=>b.localeCompare(a)).forEach(day=>{
     const dd=parseInt(day.split('-')[2]);
@@ -570,7 +570,11 @@ function openAdd(){
   document.getElementById('form-title').textContent='記録を追加';
   document.getElementById('f-amt').value='';
   document.getElementById('f-memo').value='';
-  document.getElementById('f-date').value=new Date().toISOString().substring(0,10);
+  // 表示中の月の1日をデフォルト（今月なら今日）
+  const defaultDate=isNow(vY,vM)
+    ? new Date().toISOString().substring(0,10)
+    : `${vY}-${String(vM).padStart(2,'0')}-01`;
+  document.getElementById('f-date').value=defaultDate;
   document.getElementById('del-btn').style.display='none';
   mkChips('cp-pay',master.pay,'');mkChips('cp-use',master.use,'');mkChips('cp-place',master.place,'');
   go('sc-add');
